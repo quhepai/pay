@@ -133,10 +133,11 @@ class Wechat implements GatewayApplicationInterface
      */
     public function verify($content = null, $refund = false): Collection
     {
-        $content = $content ?? Request::createFromGlobals()->getContent();
-        $data = Support::fromXml(
-            $refund ? Support::decryptRefundContents($content, $this->config->get('key')) : $content
-        );
+        $data = Support::fromXml($content ?? Request::createFromGlobals()->getContent());
+        if ($refund) {
+            $decrypt_data = Support::decryptRefundContents($data['req_info'], $this->config->get('key'));
+            $data = array_merge(Support::fromXml($decrypt_data), $data);
+        }
 
         Log::debug('Receive Wechat Request:', $data);
 
